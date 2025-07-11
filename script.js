@@ -78,7 +78,6 @@ async function runSearch() {
   const sheet = document.getElementById('sheet').value;
   const emailInput = document.getElementById('email');
   const email = emailInput ? emailInput.value.trim() : '';
-  const spinner = document.getElementById('spinner');
   const searchContainer = document.getElementById('searchContainer');
 
   const spinner = document.getElementById('spinner');
