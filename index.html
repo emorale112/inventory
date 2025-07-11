@@ -1,44 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Inventory Search</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inventory Search</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 600px;
+    margin: 30px auto;
+    background: #f9f8fc;
+    color: #3a2a5a;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 12px #d3cfff;
+  }
+
+  h2 {
+    color: #5a4589;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  label {
+    display: block;
+    margin-top: 12px;
+    font-weight: 600;
+  }
+
+  input, select, button {
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 6px;
+    border: 1.5px solid #7b6fc4;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    color: #3a2a5a;
+  }
+
+  button {
+    background-color: #6a5acd;
+    color: white;
+    font-weight: 700;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover:not(:disabled) {
+    background-color: #5948a0;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  #status {
+    margin-top: 18px;
+    font-weight: 600;
+    color: #5a4589;
+    min-height: 24px;
+    text-align: center;
+  }
+
+  /* Pulsing Heart Loader */
+  .loader {
+    position: relative;
+    width: 40px;
+    height: 60px;
+    margin: 18px auto;
+    animation: heartBeat 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  .loader:before,
+  .loader:after {
+    content: "";
+    background: #6a5acd;
+    width: 40px;
+    height: 60px;
+    border-radius: 50px 50px 0 0;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    transform-origin: 50% 68%;
+    box-shadow: 5px 4px 5px #4b3a85 inset;
+  }
+  .loader:before {
+    transform: rotate(45deg);
+  }
+  .loader:after {
+    transform: rotate(-45deg);
+  }
+  @keyframes heartBeat {
+    0% { transform: scale(0.95); }
+    5% { transform: scale(1.1); }
+    39% { transform: scale(0.85); }
+    45% { transform: scale(1); }
+    60% { transform: scale(0.95); }
+    100% { transform: scale(0.9); }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 22px;
+    box-shadow: 0 0 8px #c5bff1;
+  }
+
+  th, td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid #d8d2f0;
+  }
+
+  th {
+    background-color: #6a5acd;
+    color: white;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f1eefe;
+  }
+
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Search Inventory</h1>
-    <div class="search-panel">
-      <input id="query" placeholder="Search term..." />
-      <select id="column">
-        <option value="all">All Columns</option>
-        <option value="Item Name">Item Name</option>
-        <option value="UPC">UPC</option>
-        <option value="Quantity">Quantity</option>
-        <option value="Received Date">Received Date</option>
-      </select>
-      <select id="sheet">
-        <option value="all">All Sheets</option>
-      </select>
-      <input type="date" id="startDate" />
-      <input type="date" id="endDate" />
-      <button id="searchBtn">Search</button>
-      <div id="loader" class="loader" style="display: none;"></div>
-      <div id="status"></div>
-    </div>
 
-    <div id="download-section" style="display: none;">
-      <button id="downloadCSV">Download CSV</button>
-      <button id="downloadJSON">Download JSON</button>
-    </div>
+  <h2>Inventory Search</h2>
 
-    <div id="results-container" style="display: none;">
-      <h2>Results</h2>
-      <div id="results"></div>
-    </div>
-  </div>
+  <label for="query">Search Term</label>
+  <input type="text" id="query" placeholder="e.g. Pikachu, 123456" />
 
-  <script src="script.js"></script>
+  <label for="column">Column</label>
+  <select id="column">
+    <option value="all">All Columns</option>
+    <option value="Item Name">Item Name</option>
+    <option value="UPC">UPC</option>
+    <option value="Quantity">Quantity</option>
+    <option value="Received Date">Received Date</option>
+  </select>
+
+  <label for="sheet">Sheet</label>
+  <select id="sheet">
+    <option value="all">All Sheets</option>
+  </select>
+
+  <label for="startDate">Start Date</label>
+  <input type="date" id="startDate" />
+
+  <label for="endDate">End Date</label>
+  <input type="date" id="endDate" />
+
+  <button id="searchBtn">Search</button>
+
+  <div id="spinner" class="loader" style="display:none;"></div>
+  <div id="status">Ready</div>
+
+  <table id="resultsTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Box Location</th>
+        <th>Item Name</th>
+        <th>UPC</th>
+        <th>Quantity</th>
+        <th>Received Date</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script src="script.js"></script>
+
 </body>
 </html>
