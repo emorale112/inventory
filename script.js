@@ -13,10 +13,12 @@ function clearResults() {
 function displayResults(data) {
   const container = document.getElementById('results');
   container.innerHTML = '';
-  if (!data.length) {
+  if (!results || results.length === 0) {
+    setStatus('No matching rows found.');
     container.textContent = 'No matching rows found.';
     return;
   }
+
 
   const table = document.createElement('table');
   table.innerHTML = `
@@ -93,6 +95,7 @@ async function runSearch() {
     if (data.error) throw new Error(data.error);
 
     displayResults(data.results);
+    document.getElementById('search-area').classList.add('hidden');
     setStatus(`Found ${data.results.length} matching row(s).`);
     searchContainer.style.maxHeight = '0';
     searchContainer.style.overflow = 'hidden';
