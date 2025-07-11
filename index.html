@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventory Search</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1>Inventory Search</h1>
+
+  <div id="search-container">
+    <label for="query">Search Term</label>
+    <input type="text" id="query" placeholder="e.g. Pikachu, 123456" />
+
+    <label for="column">Column</label>
+    <select id="column">
+      <option value="all">All Columns</option>
+      <option value="Item Name">Item Name</option>
+      <option value="UPC">UPC</option>
+      <option value="Quantity">Quantity</option>
+      <option value="Received Date">Received Date</option>
+    </select>
+
+    <label for="sheet">Sheet</label>
+    <select id="sheet">
+      <option value="all">All Sheets</option>
+    </select>
+
+    <label for="startDate">Start Date</label>
+    <input type="date" id="startDate" />
+
+    <label for="endDate">End Date</label>
+    <input type="date" id="endDate" />
+
+    <button id="searchBtn">Search</button>
+    <div class="loader" id="loader" style="display:none;"></div>
+    <div id="status"></div>
+  </div>
+
+  <div id="results-container" style="display:none;">
+    <h2>Search Results</h2>
+    <div id="results"></div>
+    <div id="download-section" style="display:none;">
+      <button id="downloadCSV">Download CSV</button>
+      <button id="downloadJSON">Download JSON</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
