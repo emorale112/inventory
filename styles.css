@@ -1,63 +1,81 @@
 body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f8f5ff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f0ff;
   color: #222;
-  padding: 20px;
-}
-
-.container {
-  max-width: 800px;
+  padding: 16px;
+  max-width: 480px;
   margin: auto;
 }
 
-.search-panel {
-  background: #f1eaff;
-  padding: 16px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #0001;
+h2 {
+  color: #4b0082;
+  margin-bottom: 16px;
+  text-align: center;
 }
 
-.search-panel input,
-.search-panel select,
-.search-panel button {
+label {
   display: block;
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+input, select, button {
   width: 100%;
-  margin-top: 10px;
   padding: 10px;
-  font-size: 1em;
+  margin-top: 4px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  font-size: 1rem;
 }
 
-#searchBtn {
-  background: #6a4c93;
-  color: white;
-  font-weight: bold;
+button {
+  background-color: #5a3e99;
+  color: #fff;
+  font-weight: 700;
+  margin-top: 16px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
+
+button:hover:not(:disabled) {
+  background-color: #4b2f7f;
+}
+
+button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+/* Spinner styles */
 
 .loader {
+  display: inline-block;
   position: relative;
   width: 40px;
   height: 60px;
-  margin: 20px auto;
   animation: heartBeat 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  margin-left: 10px;
+  vertical-align: middle;
 }
 
 .loader:before,
 .loader:after {
   content: "";
-  background: #6a4c93;
+  background: #6a5acd; /* classy purple */
   width: 40px;
   height: 60px;
   border-radius: 50px 50px 0 0;
   position: absolute;
   left: 0;
   bottom: 0;
-  transform: rotate(45deg);
   transform-origin: 50% 68%;
-  box-shadow: 5px 4px 5px #0002 inset;
+  box-shadow: 5px 4px 5px #0004 inset;
 }
+
+.loader:before {
+  transform: rotate(45deg);
+}
+
 .loader:after {
   transform: rotate(-45deg);
 }
@@ -71,24 +89,17 @@ body {
   100% { transform: scale(0.9) }
 }
 
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin-top: 20px;
+/* Status text */
+
+#status {
+  margin-top: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5a3e99;
 }
 
-table, th, td {
-  border: 1px solid #ccc;
-}
+/* Download buttons */
 
-th {
-  background: #6a4c93;
-  color: white;
-  text-align: left;
-  padding: 8px;
-}
-
-td {
-  padding: 8px;
-  background: #fff;
+#downloadButtons button {
+  margin-top: 8px;
 }
