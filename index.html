@@ -1,207 +1,355 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Inventory Search</title>
-<style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    padding: 16px;
-    background-color: #f0edf7;
-    color: #222;
-    max-width: 480px;
-    margin: 20px auto;
-  }
-  label {
-    display: block;
-    margin-top: 12px;
-    font-weight: 600;
-  }
-  input, select, button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 4px;
-    border-radius: 6px;
-    border: 1px solid #8b80b4;
-    box-sizing: border-box;
-    font-size: 1em;
-  }
-  button {
-    background-color: #5b4b8a;
-    color: white;
-    font-weight: bold;
-    margin-top: 14px;
-    cursor: pointer;
-    user-select: none;
-  }
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  .spinner {
-    margin: 16px auto;
-    border: 4px solid #c2bedf;
-    border-top: 4px solid #5b4b8a;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    animation: spin 1s linear infinite;
-    display: none;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .status {
-    margin-top: 12px;
-    min-height: 24px;
-    color: #5b4b8a;
-  }
-  .download-buttons {
-    margin-top: 12px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .download-buttons button {
-    flex: 1 1 48%;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-  }
-  th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    font-size: 0.9em;
-  }
-  th {
-    background: #5b4b8a;
-    color: white;
-  }
-  tr:nth-child(even) {
-    background: #f7f5fc;
-  }
-</style>
+  <base target="_top" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 16px;
+      background-color: #f5f0ff;
+      color: #222;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background-color: #1a1032;
+      color: #ddd;
+    }
+
+    h2 {
+      color: #5b4b8a;
+      margin-bottom: 12px;
+      user-select: none;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 4px;
+      font-weight: 600;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: #5b4b8a;
+      outline: none;
+    }
+
+    button {
+      background-color: #5b4b8a;
+      color: white;
+      font-weight: 700;
+      margin-top: 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #4a3a74;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .loader {
+      position: relative;
+      width: 40px;
+      height: 60px;
+      margin: 16px auto;
+      animation: heartBeat 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+      display: none;
+    }
+
+    .loader:before,
+    .loader:after {
+      content: "";
+      background: #5b4b8a;
+      width: 40px;
+      height: 60px;
+      border-radius: 50px 50px 0 0;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      transform-origin: 50% 68%;
+      box-shadow: 5px 4px 5px #0004 inset;
+    }
+
+    .loader:before {
+      transform: rotate(45deg);
+    }
+    .loader:after {
+      transform: rotate(-45deg);
+    }
+
+    @keyframes heartBeat {
+      0% { transform: scale(0.95) }
+      5% { transform: scale(1.1) }
+      39% { transform: scale(0.85) }
+      45% { transform: scale(1) }
+      60% { transform: scale(0.95) }
+      100% { transform: scale(0.9) }
+    }
+
+    .status {
+      font-size: 0.95em;
+      margin-top: 10px;
+      min-height: 24px;
+      color: #5b4b8a;
+      user-select: none;
+    }
+
+    .dark .status {
+      color: #b9aaff;
+    }
+
+    .toggle-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      user-select: none;
+    }
+
+    .download-buttons {
+      margin-top: 12px;
+      display: none;
+    }
+
+    .download-buttons button {
+      margin-bottom: 6px;
+      width: 100%;
+    }
+
+    #resultsTable {
+      margin-top: 16px;
+      width: 100%;
+      border-collapse: collapse;
+      display: none;
+    }
+
+    #resultsTable th, #resultsTable td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 0.9em;
+      vertical-align: middle;
+    }
+
+    #resultsTable th {
+      background-color: #5b4b8a;
+      color: white;
+      user-select: none;
+    }
+
+    #resultsTable tr:nth-child(even) {
+      background-color: #f6f3ff;
+    }
+
+    #resultsTable tr:hover {
+      background-color: #ddd;
+    }
+
+    #clearBtn {
+      margin-top: 12px;
+      width: 100%;
+      background-color: #777;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #clearBtn:hover {
+      background-color: #555;
+    }
+
+  </style>
 </head>
 <body>
+  <h2>Search Across Sheets</h2>
 
-<h1>Inventory Search</h1>
+  <div id="searchArea">
+    <label for="query">Search Term</label>
+    <input type="text" id="query" placeholder="e.g. Pikachu, 123456" />
 
-<label for="query">Search Term</label>
-<input id="query" placeholder="e.g. Pikachu, 123456" />
+    <label for="column">Column</label>
+    <select id="column">
+      <option value="all">All Columns</option>
+      <option value="Item Name">Item Name</option>
+      <option value="UPC">UPC</option>
+      <option value="Quantity">Quantity</option>
+      <option value="Received Date">Received Date</option>
+    </select>
 
-<label for="column">Column</label>
-<select id="column">
-  <option value="all">All Columns</option>
-  <option value="Item Name">Item Name</option>
-  <option value="UPC">UPC</option>
-  <option value="Quantity">Quantity</option>
-  <option value="Received Date">Received Date</option>
-</select>
+    <label for="sheet">Sheet</label>
+    <select id="sheet">
+      <option value="all">All Sheets</option>
+    </select>
 
-<label for="sheet">Sheet</label>
-<select id="sheet"><option value="all">All Sheets</option></select>
+    <label for="startDate">Start Date</label>
+    <input type="date" id="startDate" />
 
-<label for="startDate">Start Date</label>
-<input type="date" id="startDate" />
+    <label for="endDate">End Date</label>
+    <input type="date" id="endDate" />
 
-<label for="endDate">End Date</label>
-<input type="date" id="endDate" />
+    <button onclick="runSearch()" id="searchBtn">Search</button>
+  </div>
 
-<button id="searchBtn" onclick="runSearch()">Search</button>
+  <div class="loader" id="spinner"></div>
 
-<div class="spinner" id="spinner"></div>
-<div class="status" id="status">Ready</div>
+  <div class="status" id="status">Ready</div>
 
-<div class="download-buttons" id="downloadButtons" style="display:none;">
-  <button onclick="downloadCSV()">Download CSV</button>
-  <button onclick="downloadJSON()">Download JSON</button>
-</div>
+  <div class="download-buttons" id="downloadButtons">
+    <button onclick="downloadResults('csv')">Download CSV</button>
+    <button onclick="downloadResults('json')">Download JSON</button>
+    <button onclick="emailResults()">Email Results</button>
+  </div>
 
-<table id="resultsTable" style="display:none;">
-  <thead>
-    <tr>
-      <th>Box Location</th>
-      <th>Item Name</th>
-      <th>UPC</th>
-      <th>Quantity</th>
-      <th>Received Date</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+  <button id="clearBtn" onclick="clearSearch()" style="display:none;">Clear Search</button>
 
-<script>
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec'; // <-- Replace with your actual Web App URL
+  <table id="resultsTable" cellspacing="0" cellpadding="0">
+    <thead>
+      <tr>
+        <th>Box Location</th>
+        <th>Item Name</th>
+        <th>UPC</th>
+        <th>Quantity</th>
+        <th>Received Date</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-let lastResults = [];
+  <div class="toggle-container">
+    <label>Dark Mode</label>
+    <input type="checkbox" id="darkToggle" onchange="toggleDarkMode()" />
+  </div>
 
-async function fetchSheetNames() {
-  const res = await fetch(`${WEBAPP_URL}?action=getSheetNames`);
-  const data = await res.json();
-  if (data.success) {
-    const sheetSelect = document.getElementById('sheet');
-    data.sheets.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      sheetSelect.appendChild(opt);
-    });
-  }
-}
+  <script>
+    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec'; // Replace with your Apps Script Web App URL
+    let lastResults = [];
 
-async function runSearch() {
-  const query = document.getElementById('query').value.trim();
-  const column = document.getElementById('column').value;
-  const sheet = document.getElementById('sheet').value;
-  const startDate = document.getElementById('startDate').value;
-  const endDate = document.getElementById('endDate').value;
-  const status = document.getElementById('status');
-  const spinner = document.getElementById('spinner');
-  const searchBtn = document.getElementById('searchBtn');
-  const resultsTable = document.getElementById('resultsTable');
-  const tbody = resultsTable.querySelector('tbody');
+    google.script.run.withSuccessHandler(populateSheets).getSheetNames();
 
-  if (!query) {
-    status.textContent = 'Please enter a search term.';
-    return;
-  }
+    function populateSheets(sheets) {
+      const select = document.getElementById('sheet');
+      sheets.forEach(name => {
+        if (name === 'Search Results') return; // skip results sheet
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+    }
 
-  status.textContent = 'Searching...';
-  spinner.style.display = 'block';
-  searchBtn.disabled = true;
-  resultsTable.style.display = 'none';
-  tbody.innerHTML = '';
-  document.getElementById('downloadButtons').style.display = 'none';
+    function runSearch() {
+      const query = document.getElementById('query').value.trim();
+      const column = document.getElementById('column').value;
+      const sheet = document.getElementById('sheet').value;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const status = document.getElementById('status');
+      const spinner = document.getElementById('spinner');
+      const button = document.getElementById('searchBtn');
 
-  try {
-    const params = new URLSearchParams({
-      action: 'searchSheetsWithFilters',
-      query,
-      column,
-      sheet,
-      startDate,
-      endDate
-    });
-
-    const res = await fetch(`${WEBAPP_URL}?${params.toString()}`);
-    const data = await res.json();
-
-    spinner.style.display = 'none';
-    searchBtn.disabled = false;
-
-    if (data.success) {
-      lastResults = data.results;
-
-      if (lastResults.length === 0) {
-        status.textContent = 'No matching rows found.';
+      if (!query) {
+        status.textContent = 'Please enter a search term.';
         return;
       }
 
-      status.textContent = `Found ${lastResults.length} matching row(s).`;
+      status.textContent = 'Searching...';
+      spinner.style.display = 'block';
+      button.disabled = true;
+      document.getElementById('clearBtn').style.display = 'none';
+      document.getElementById('downloadButtons').style.display = 'none';
+      document.getElementById('resultsTable').style.display = 'none';
 
-      // Populate table
-      lastResults.forEach(row => {
+      google.script.run.withSuccessHandler(function(count) {
+        // Then fetch full results to display
+        google.script.run.withSuccessHandler(function(results) {
+          spinner.style.display = 'none';
+          button.disabled = false;
+
+          if (!results || results.length === 0) {
+            status.textContent = 'No matching rows found.';
+            lastResults = [];
+            return;
+          }
+
+          status.textContent = `Found ${results.length} matching row(s).`;
+
+          lastResults = results;
+          showResultsTable(results);
+
+          // Hide search area with animation
+          collapseSearchArea();
+
+          document.getElementById('downloadButtons').style.display = 'block';
+          document.getElementById('clearBtn').style.display = 'block';
+        }).searchSheetsWithFullResults(query, column, sheet, startDate, endDate);
+      }).searchSheetsWithFilters(query, column, sheet, startDate, endDate);
+    }
+
+    // Collapse search area with smooth height animation
+    function collapseSearchArea() {
+      const searchArea = document.getElementById('searchArea');
+      searchArea.style.transition = 'height 0.5s ease, opacity 0.5s ease';
+      searchArea.style.height = searchArea.scrollHeight + 'px'; // fix height for animation
+      requestAnimationFrame(() => {
+        searchArea.style.height = '0';
+        searchArea.style.opacity = '0';
+      });
+      setTimeout(() => {
+        searchArea.style.display = 'none';
+      }, 500);
+    }
+
+    // Expand search area when clearing search
+    function expandSearchArea() {
+      const searchArea = document.getElementById('searchArea');
+      searchArea.style.display = 'block';
+      searchArea.style.opacity = '0';
+      searchArea.style.height = '0';
+      requestAnimationFrame(() => {
+        searchArea.style.transition = 'height 0.5s ease, opacity 0.5s ease';
+        searchArea.style.height = searchArea.scrollHeight + 'px';
+        searchArea.style.opacity = '1';
+      });
+      setTimeout(() => {
+        searchArea.style.height = '';
+        searchArea.style.transition = '';
+      }, 500);
+    }
+
+    function clearSearch() {
+      lastResults = [];
+      document.getElementById('status').textContent = 'Ready';
+      document.getElementById('downloadButtons').style.display = 'none';
+      document.getElementById('resultsTable').style.display = 'none';
+      document.getElementById('clearBtn').style.display = 'none';
+      document.getElementById('query').value = '';
+      document.getElementById('column').value = 'all';
+      document.getElementById('sheet').value = 'all';
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      expandSearchArea();
+    }
+
+    function showResultsTable(results) {
+      const tbody = document.querySelector('#resultsTable tbody');
+      tbody.innerHTML = '';
+
+      results.forEach(row => {
         const tr = document.createElement('tr');
         row.forEach(cell => {
           const td = document.createElement('td');
@@ -210,71 +358,93 @@ async function runSearch() {
         });
         tbody.appendChild(tr);
       });
-
-      resultsTable.style.display = 'table';
-      document.getElementById('downloadButtons').style.display = 'flex';
-    } else {
-      status.textContent = 'Error: ' + data.error;
+      document.getElementById('resultsTable').style.display = 'table';
     }
-  } catch (err) {
-    spinner.style.display = 'none';
-    searchBtn.disabled = false;
-    status.textContent = 'Fetch error: ' + err.message;
-  }
-}
 
-function downloadCSV() {
-  if (!lastResults.length) {
-    alert('No results to download.');
-    return;
-  }
-  const headers = ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'];
-  const csvRows = [headers.join(',')];
-  lastResults.forEach(row => {
-    const escaped = row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`);
-    csvRows.push(escaped.join(','));
-  });
-  const csvString = csvRows.join('\n');
-  const blob = new Blob([csvString], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+    }
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'search_results.csv';
-  a.click();
+    function downloadResults(type) {
+      if (!lastResults.length) {
+        alert('No results to download.');
+        return;
+      }
 
-  URL.revokeObjectURL(url);
-}
+      if (type === 'csv') {
+        const headers = ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'];
+        const csvRows = [headers.join(',')];
+        lastResults.forEach(row => {
+          const escaped = row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`);
+          csvRows.push(escaped.join(','));
+        });
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'search_results.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (type === 'json') {
+        const jsonStr = JSON.stringify(lastResults, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'search_results.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    }
 
-function downloadJSON() {
-  if (!lastResults.length) {
-    alert('No results to download.');
-    return;
-  }
-  const headers = ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'];
-  const jsonArray = lastResults.map(row => {
-    const obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = row[i];
+    function emailResults() {
+      if (!lastResults.length) {
+        alert('No results to email.');
+        return;
+      }
+      const email = prompt('Enter email address to send results to:');
+      if (!email) return;
+
+      const headers = ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'];
+      const csvRows = [headers.join(',')];
+      lastResults.forEach(row => {
+        const escaped = row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`);
+        csvRows.push(escaped.join(','));
+      });
+      const csvString = csvRows.join('\n');
+
+      fetch(WEBAPP_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'emailResults',
+          email,
+          csv: csvString
+        }),
+        headers: { 'Content-Type': 'application/json' }
+      }).then(res => res.json())
+        .then(data => {
+          if (data.success) alert('Email sent!');
+          else alert('Error sending email: ' + data.error);
+        })
+        .catch(e => alert('Fetch error: ' + e.message));
+    }
+
+    // Add an Apps Script server function to get full results array
+    google.script.run
+      .withSuccessHandler(() => {}) // No op here
+      .withFailureHandler(console.error)
+      .searchSheetsWithFullResults = function(query, column, sheet, startDate, endDate) {
+        return google.script.run
+          .withSuccessHandler(function(results) { return results; })
+          .searchSheets(query, column, sheet, startDate, endDate);
+      };
+
+    // Run search on Enter keypress in search box
+    document.getElementById('query').addEventListener('keydown', e => {
+      if (e.key === 'Enter') runSearch();
     });
-    return obj;
-  });
-
-  const jsonString = JSON.stringify(jsonArray, null, 2);
-  const blob = new Blob([jsonString], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'search_results.json';
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-// Load sheet names on page load
-window.onload = fetchSheetNames;
-</script>
-
+  </script>
 </body>
 </html>
+
