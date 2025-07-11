@@ -1,38 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inventory Search</title>
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    input, select, button { width: 100%; margin: 8px 0; padding: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background-color: #6a5acd; color: white; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Inventory Search</h2>
+  <h2>Inventory Search</h2>
+  <input id="query" placeholder="Search term" />
+  <select id="column">
+    <option value="all">All Columns</option>
+    <option value="item name">Item Name</option>
+    <option value="upc">UPC</option>
+    <option value="quantity">Quantity</option>
+    <option value="received date">Received Date</option>
+  </select>
+  <select id="sheet">
+    <option value="all">All Sheets</option>
+  </select>
+  <button id="searchBtn">Search</button>
 
-    <label for="query">Search Term</label>
-    <input type="text" id="query" placeholder="e.g. Pikachu, 123456" />
-
-    <label for="column">Column</label>
-    <select id="column">
-      <option value="all">All Columns</option>
-      <option value="Item Name">Item Name</option>
-      <option value="UPC">UPC</option>
-      <option value="Quantity">Quantity</option>
-      <option value="Received Date">Received Date</option>
-    </select>
-
-    <label for="sheet">Sheet</label>
-    <select id="sheet">
-      <option value="all">All Sheets</option>
-    </select>
-
-    <button id="searchBtn">Search</button>
-    <div id="status" class="status">Loading sheets...</div>
-    <div id="results" class="results"></div>
-  </div>
+  <div id="status"></div>
+  <div id="results"></div>
 
   <script src="script.js"></script>
 </body>
 </html>
-
