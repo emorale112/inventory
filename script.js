@@ -1,22 +1,14 @@
-// Run after DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  // Load sheet names into dropdown
-  fetchSheetNames();
+const backendUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // replace YOUR_SCRIPT_ID
 
-  // Attach Enter key listener for search input
-  const queryInput = document.getElementById('query');
-  queryInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') search();
-  });
-});
-
-function fetchSheetNames() {
-  // Replace this with your backend fetch call to get sheet names
-  fetch('https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec?action=getSheetNames')
+// Populate sheets dropdown on load
+window.addEventListener('DOMContentLoaded', () => {
+  fetch(`${backendUrl}?action=getSheetNames`)
     .then(res => res.json())
     .then(data => {
+      // Defensive: check if data.sheets is array
+      const sheetNames = Array.isArray(data.sheets) ? data.sheets : [];
       const sheetSelect = document.getElementById('sheet');
-      data.forEach(name => {
+      sheetNames.forEach(name => {
         const option = document.createElement('option');
         option.value = name;
         option.textContent = name;
@@ -24,71 +16,98 @@ function fetchSheetNames() {
       });
     })
     .catch(err => {
-      console.error('Failed to fetch sheets:', err);
+      console.error('Error loading sheets:', err);
+      const status = document.getElementById('status');
+      if (status) status.textContent = 'Failed to load sheets.';
     });
-}
+});
 
-async function search() {
+// Search button click handler
+document.getElementById('searchBtn').addEventListener('click', () => {
   const query = document.getElementById('query').value.trim();
-  const column = document.getElementById('column').value;
-  const sheet = document.getElementById('sheet').value;
-  const startDate = document.getElementById('startDate').value;
-  const endDate = document.getElementById('endDate').value;
-
-  const status = document.getElementById('status');
-  const spinner = document.getElementById('spinner');
-  const downloadButtons = document.getElementById('downloadButtons');
-  const searchBtn = document.getElementById('searchBtn');
-
   if (!query) {
-    status.textContent = 'Please enter a search term.';
+    setStatus('Please enter a search term.');
     return;
   }
 
-  status.textContent = 'Searching...';
-  spinner.style.display = 'inline-block';
-  searchBtn.disabled = true;
-  downloadButtons.style.display = 'none';
+  setStatus('');
+  toggleSpinner(true);
 
-  try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        action: 'searchSheets', 
-        query, 
-        column, 
-        sheet, 
-        startDate, 
-        endDate 
-      })
+  const column = document.getElementById('column').value;
+  const sheet = document.getElementById('sheet').value;
+
+  const url = new URL(backendUrl);
+  url.searchParams.append('action', 'searchSheets');
+  url.searchParams.append('query', query);
+  url.searchParams.append('column', column);
+  url.searchParams.append('sheet', sheet);
+
+  fetch(url.toString())
+    .then(res => res.json())
+    .then(data => {
+      toggleSpinner(false);
+      if (data.error) {
+        setStatus('Error: ' + data.error);
+        clearResults();
+        return;
+      }
+      setStatus(`Found ${data.results.length} matching row(s).`);
+      displayResults(data.results);
+    })
+    .catch(err => {
+      toggleSpinner(false);
+      setStatus('Search failed.');
+      console.error(err);
     });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+});
 
-    const data = await response.json();
+function toggleSpinner(show) {
+  const spinner = document.getElementById('spinner');
+  if (!spinner) return;
+  spinner.style.display = show ? 'block' : 'none';
+}
 
-    spinner.style.display = 'none';
-    searchBtn.disabled = false;
+function setStatus(msg) {
+  const status = document.getElementById('status');
+  if (!status) return;
+  status.textContent = msg;
+}
 
-    if (data.results && data.results.length) {
-      status.textContent = `Found ${data.results.length} matching rows.`;
-      downloadButtons.style.display = 'block';
+function clearResults() {
+  const resultsDiv = document.getElementById('results');
+  if (!resultsDiv) return;
+  resultsDiv.innerHTML = '';
+}
 
-      // Optionally display results here or in sheet (depends on your app design)
-      // You could add a function to render results on the page if you want
-    } else {
-      status.textContent = 'No matching rows found.';
-      downloadButtons.style.display = 'none';
-    }
-  } catch (error) {
-    spinner.style.display = 'none';
-    searchBtn.disabled = false;
-    status.textContent = 'Error: ' + error.message;
+function displayResults(results) {
+  clearResults();
+  const resultsDiv = document.getElementById('results');
+  if (!resultsDiv) return;
+
+  if (!results.length) {
+    resultsDiv.textContent = 'No matching rows found.';
+    return;
   }
-}
 
-function downloadResults(type) {
-  // Replace with actual backend call or generate CSV/JSON from results cached in your app
-  alert(`Download ${type.toUpperCase()} functionality not implemented yet.`);
+  const table = document.createElement('table');
+  table.border = '1';
+  const headerRow = document.createElement('tr');
+  ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'].forEach(hdr => {
+    const th = document.createElement('th');
+    th.textContent = hdr;
+    headerRow.appendChild(th);
+  });
+  table.appendChild(headerRow);
+
+  results.forEach(row => {
+    const tr = document.createElement('tr');
+    row.forEach(cell => {
+      const td = document.createElement('td');
+      td.textContent = cell;
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+
+  resultsDiv.appendChild(table);
 }
-// update
