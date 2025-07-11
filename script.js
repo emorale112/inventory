@@ -1,114 +1,62 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec';
-//a
-// Helper to update the status area
-function setStatus(message) {
-  const statusEl = document.getElementById('status');
-  if (statusEl) statusEl.textContent = message;
+
+function setStatus(text) {
+  document.getElementById('status').textContent = text;
 }
 
-// Load sheet names into the dropdown
+function displayResults(rows) {
+  const container = document.getElementById('results');
+  if (!rows.length) {
+    container.innerHTML = '<p>No results found.</p>';
+    return;
+  }
+  let html = '<table><thead><tr><th>Box Location</th><th>Item Name</th><th>UPC</th><th>Quantity</th><th>Received Date</th></tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
 function loadSheets() {
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'getSheetNames' })
-  })
+  fetch(`${SCRIPT_URL}?action=getSheetNames`)
     .then(res => res.json())
     .then(data => {
-      const sheetSelect = document.getElementById('sheet');
-      if (!sheetSelect || !data.sheets) throw new Error("Missing dropdown or data");
-
+      const select = document.getElementById('sheet');
       data.sheets.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        sheetSelect.appendChild(opt);
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
       });
-
       setStatus('Ready');
     })
-    .catch(err => setStatus('Error loading sheets: ' + err.message));
+    .catch(() => setStatus('Failed to load sheets'));
 }
 
-// Display search results in a table
-function displayResults(results) {
-  const container = document.getElementById('results');
-  container.innerHTML = '';
-
-  if (!results.length) {
-    container.textContent = 'No matching rows found.';
-    return;
-  }
-
-  const table = document.createElement('table');
-  table.classList.add('results-table');
-
-  const headers = ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'];
-  const thead = document.createElement('thead');
-  const trHead = document.createElement('tr');
-  headers.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h;
-    trHead.appendChild(th);
-  });
-  thead.appendChild(trHead);
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  results.forEach((row, i) => {
-    const tr = document.createElement('tr');
-    row.forEach(cell => {
-      const td = document.createElement('td');
-      td.textContent = cell;
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  container.appendChild(table);
-}
-
-// Handle the search
 function runSearch() {
   const query = document.getElementById('query').value.trim();
-  const column = document.getElementById('column').value;
-  const sheet = document.getElementById('sheet').value;
-
   if (!query) {
-    setStatus('Please enter a search term.');
+    setStatus('Enter a search term');
     return;
   }
-
+  const column = document.getElementById('column').value;
+  const sheet = document.getElementById('sheet').value;
   setStatus('Searching...');
-  document.getElementById('results').innerHTML = '';
+  displayResults([]);
 
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'searchSheets',
-      query,
-      column,
-      sheet
-    })
-  })
+  fetch(`${SCRIPT_URL}?action=searchSheets&query=${encodeURIComponent(query)}&column=${encodeURIComponent(column)}&sheet=${encodeURIComponent(sheet)}`)
     .then(res => res.json())
     .then(data => {
-      if (data.error) {
-        setStatus('Search error: ' + data.error);
-      } else {
+      if (data.results) {
+        setStatus(`Found ${data.results.length} rows`);
         displayResults(data.results);
-        setStatus(`Found ${data.results.length} result(s).`);
+      } else {
+        setStatus('No results');
       }
     })
-    .catch(err => setStatus('Search error: ' + err.message));
+    .catch(() => setStatus('Search failed'));
 }
 
-// Attach listeners
-document.getElementById('searchBtn')?.addEventListener('click', runSearch);
-document.getElementById('query')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') runSearch();
-});
-
-// Initialize on load
-loadSheets();
+document.getElementById('searchBtn').addEventListener('click', runSearch);
+window.onload = loadSheets;
