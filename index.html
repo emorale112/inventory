@@ -76,19 +76,17 @@
 <p class="p1"><span class="Apple-converted-space">  </span>&lt;/table&gt;</p>
 <p class="p2"><br></p>
 <p class="p1">&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>// Replace this URL with your deployed Google Apps Script Web App URL</p>
 <p class="p1"><span class="Apple-converted-space">  </span>const webAppUrl = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec';</p>
 <p class="p2"><br></p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('searchBtn').addEventListener('click', async () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>function runSearch() {</p>
 <p class="p1"><span class="Apple-converted-space">    </span>const query = document.getElementById('query').value.trim();</p>
 <p class="p1"><span class="Apple-converted-space">    </span>const column = document.getElementById('column').value;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>const sheet = document.getElementById('sheet').value;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>const startDate = document.getElementById('startDate').value;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>const endDate = document.getElementById('endDate').value;</p>
 <p class="p1"><span class="Apple-converted-space">    </span>const status = document.getElementById('status');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const resultsTable = document.getElementById('resultsTable');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const tbody = resultsTable.querySelector('tbody');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const spinner = document.getElementById('spinner');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const button = document.getElementById('searchBtn');</p>
 <p class="p2"><br></p>
 <p class="p1"><span class="Apple-converted-space">    </span>if (!query) {</p>
 <p class="p1"><span class="Apple-converted-space">      </span>status.textContent = 'Please enter a search term.';</p>
@@ -96,43 +94,35 @@
 <p class="p1"><span class="Apple-converted-space">    </span>}</p>
 <p class="p2"><br></p>
 <p class="p1"><span class="Apple-converted-space">    </span>status.textContent = 'Searching...';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>resultsTable.style.display = 'none';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>tbody.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>spinner.style.display = 'block';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>button.disabled = true;</p>
 <p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>try {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const params = new URLSearchParams({query, column, sheet, startDate, endDate});</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const resp = await fetch(webAppUrl + '?' + params.toString());</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const data = await resp.json();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const url = `${webAppUrl}?query=${encodeURIComponent(query)}&amp;column=${encodeURIComponent(column)}&amp;sheet=${encodeURIComponent(sheet)}&amp;startDate=${encodeURIComponent(startDate)}&amp;endDate=${encodeURIComponent(endDate)}`;</p>
 <p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>if (data.error) {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>status.textContent = 'Error: ' + data.error;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fetch(url)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>.then(res =&gt; res.json())</p>
+<p class="p1"><span class="Apple-converted-space">      </span>.then(data =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>spinner.style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>button.disabled = false;</p>
 <p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>const results = data.results;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>if (!results.length) {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>status.textContent = 'No matching rows found.';</p>
-<p class="p1"><span class="Apple-converted-space">        </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>status.textContent = `Found ${results.length} matching row(s).`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>results.forEach(row =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const tr = document.createElement('tr');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>row.forEach(cell =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">          </span>const td = document.createElement('td');</p>
-<p class="p1"><span class="Apple-converted-space">          </span>td.textContent = cell;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>tr.appendChild(td);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p1"><span class="Apple-converted-space">        </span>tbody.appendChild(tr);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (data.success) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>status.textContent = `Found ${data.count} matching row(s). See "Search Results" in your Google Sheet.`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>status.textContent = `Error: ${data.error}`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>})</p>
+<p class="p1"><span class="Apple-converted-space">      </span>.catch(err =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>spinner.style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>button.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status.textContent = `Request failed: ${err.message}`;</p>
 <p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
 <p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>resultsTable.style.display = 'table';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>} catch (err) {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>status.textContent = 'Error: ' + err.message;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>function toggleDarkMode() {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.body.classList.toggle('dark');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
 <p class="p1">&lt;/script&gt;</p>
+<p class="p2"><br></p>
 <p class="p1">&lt;/body&gt;</p>
 <p class="p1">&lt;/html&gt;</p>
 </body>
