@@ -113,3 +113,14 @@ th {
     width: 100%;
   }
 }
+
+#search-area {
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  overflow: hidden;
+  max-height: 1000px;
+  opacity: 1;
+}
+#search-area.hidden {
+  max-height: 0;
+  opacity: 0;
+}
