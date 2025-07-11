@@ -1,31 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inventory Search</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
-    input, select, button { width: 100%; margin: 8px 0; padding: 8px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    th, td { border: 1px solid #ddd; padding: 8px; }
-    th { background-color: #6a5acd; color: white; }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h2>Inventory Search</h2>
-  <input id="query" placeholder="Search term" />
-  <select id="column">
-    <option value="all">All Columns</option>
-    <option value="item name">Item Name</option>
-    <option value="upc">UPC</option>
-    <option value="quantity">Quantity</option>
-    <option value="received date">Received Date</option>
-  </select>
-  <select id="sheet">
-    <option value="all">All Sheets</option>
-  </select>
-  <button id="searchBtn">Search</button>
+  <div id="searchContainer">
+    <h2>Search Inventory</h2>
 
-  <div id="status"></div>
+    <label for="query">Search Term</label>
+    <input type="text" id="query" placeholder="e.g. Pikachu, 123456" />
+
+    <label for="column">Column</label>
+    <select id="column">
+      <option value="all">All Columns</option>
+      <option value="item name">Item Name</option>
+      <option value="upc">UPC</option>
+      <option value="quantity">Quantity</option>
+      <option value="received date">Received Date</option>
+    </select>
+
+    <label for="sheet">Sheet</label>
+    <select id="sheet">
+      <option value="all">All Sheets</option>
+    </select>
+
+    <label for="email">Email Results (Optional)</label>
+    <input type="email" id="email" placeholder="you@example.com" />
+
+    <button id="searchBtn">Search</button>
+    <button id="clearBtn">Clear Results</button>
+
+    <div id="spinner" style="display:none;">🔄 Searching...</div>
+    <div id="status"></div>
+  </div>
+
+  <div id="downloadButtons" style="display:none;">
+    <button onclick="downloadCSV()">Download CSV</button>
+    <button onclick="downloadJSON()">Download JSON</button>
+  </div>
+
   <div id="results"></div>
 
   <script src="script.js"></script>
