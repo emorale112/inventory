@@ -81,6 +81,15 @@ async function runSearch() {
   const spinner = document.getElementById('spinner');
   const searchContainer = document.getElementById('searchContainer');
 
+  const spinner = document.getElementById('spinner');
+    spinner.classList.add('pulse-heart');
+    spinner.style.display = 'inline-block';
+    
+    // When done searching:
+    spinner.classList.remove('pulse-heart');
+    spinner.style.display = 'none';
+
+
   if (!query) return setStatus('Please enter a search term.');
   setStatus('Searching...');
   spinner.style.display = 'block';
