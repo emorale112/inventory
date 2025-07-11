@@ -1,13 +1,22 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec'; 
-// Replace YOUR_SCRIPT_ID with your actual Google Apps Script deployment ID
+// Run after DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Load sheet names into dropdown
+  fetchSheetNames();
 
-// Load sheet names on page load
-window.addEventListener('DOMContentLoaded', () => {
-  fetch(`${SCRIPT_URL}?mode=sheets`)
-    .then(r => r.json())
-    .then(sheetNames => {
+  // Attach Enter key listener for search input
+  const queryInput = document.getElementById('query');
+  queryInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') search();
+  });
+});
+
+function fetchSheetNames() {
+  // Replace this with your backend fetch call to get sheet names
+  fetch('https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec?action=getSheetNames')
+    .then(res => res.json())
+    .then(data => {
       const sheetSelect = document.getElementById('sheet');
-      sheetNames.forEach(name => {
+      data.forEach(name => {
         const option = document.createElement('option');
         option.value = name;
         option.textContent = name;
@@ -15,103 +24,70 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     })
     .catch(err => {
-      console.error('Error loading sheets:', err);
-      showStatus('Failed to load sheet names.');
+      console.error('Failed to fetch sheets:', err);
     });
-});
-
-document.getElementById('searchBtn').addEventListener('click', runSearch);
-
-document.getElementById('query').addEventListener('keydown', e => {
-  if (e.key === 'Enter') runSearch();
-});
-
-function showStatus(msg) {
-  const status = document.getElementById('status');
-  status.textContent = msg;
 }
 
-function showSpinner(show) {
-  document.getElementById('spinner').style.display = show ? 'block' : 'none';
-}
-
-function runSearch() {
+async function search() {
   const query = document.getElementById('query').value.trim();
-  if (!query) {
-    showStatus('Please enter a search term.');
-    return;
-  }
-
   const column = document.getElementById('column').value;
   const sheet = document.getElementById('sheet').value;
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
 
-  showStatus('Searching...');
-  showSpinner(true);
-  document.getElementById('searchBtn').disabled = true;
+  const status = document.getElementById('status');
+  const spinner = document.getElementById('spinner');
+  const downloadButtons = document.getElementById('downloadButtons');
+  const searchBtn = document.getElementById('searchBtn');
 
-  const params = new URLSearchParams({
-    mode: 'search',
-    query,
-    column,
-    sheet,
-    startDate,
-    endDate
-  });
+  if (!query) {
+    status.textContent = 'Please enter a search term.';
+    return;
+  }
 
-  fetch(`${SCRIPT_URL}?${params.toString()}`)
-    .then(response => {
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
-    })
-    .then(results => {
-      showSpinner(false);
-      document.getElementById('searchBtn').disabled = false;
+  status.textContent = 'Searching...';
+  spinner.style.display = 'inline-block';
+  searchBtn.disabled = true;
+  downloadButtons.style.display = 'none';
 
-      if (results.error) {
-        showStatus(`Error: ${results.error}`);
-        clearResults();
-        return;
-      }
-
-      if (!results.length) {
-        showStatus('No matching rows found.');
-        clearResults();
-        return;
-      }
-
-      showStatus(`Found ${results.length} matching row(s).`);
-
-      displayResults(results);
-    })
-    .catch(error => {
-      showSpinner(false);
-      document.getElementById('searchBtn').disabled = false;
-      showStatus('Search failed: ' + error.message);
-      clearResults();
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'searchSheets', 
+        query, 
+        column, 
+        sheet, 
+        startDate, 
+        endDate 
+      })
     });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+
+    spinner.style.display = 'none';
+    searchBtn.disabled = false;
+
+    if (data.results && data.results.length) {
+      status.textContent = `Found ${data.results.length} matching rows.`;
+      downloadButtons.style.display = 'block';
+
+      // Optionally display results here or in sheet (depends on your app design)
+      // You could add a function to render results on the page if you want
+    } else {
+      status.textContent = 'No matching rows found.';
+      downloadButtons.style.display = 'none';
+    }
+  } catch (error) {
+    spinner.style.display = 'none';
+    searchBtn.disabled = false;
+    status.textContent = 'Error: ' + error.message;
+  }
 }
 
-function clearResults() {
-  const tbody = document.querySelector('#resultsTable tbody');
-  tbody.innerHTML = '';
-  document.getElementById('resultsTable').style.display = 'none';
-}
-
-function displayResults(results) {
-  const tbody = document.querySelector('#resultsTable tbody');
-  tbody.innerHTML = '';
-
-  results.forEach(row => {
-    const tr = document.createElement('tr');
-    row.forEach(cell => {
-      const td = document.createElement('td');
-      td.textContent = cell;
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-
-  document.getElementById('resultsTable').style.display = 'table';
+function downloadResults(type) {
+  // Replace with actual backend call or generate CSV/JSON from results cached in your app
+  alert(`Download ${type.toUpperCase()} functionality not implemented yet.`);
 }
