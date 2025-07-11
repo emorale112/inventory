@@ -1,0 +1,115 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f6ff;
+  color: #2c235a;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+h2 {
+  color: #4b2e83;
+  margin-bottom: 16px;
+  font-size: 1.8em;
+}
+
+label {
+  display: block;
+  margin: 10px 0 4px;
+  font-weight: 600;
+  color: #3b2e8a;
+}
+
+input[type="text"],
+input[type="email"],
+select {
+  width: 100%;
+  padding: 10px;
+  font-size: 1em;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #6a5acd;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 1em;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #5a4bb3;
+}
+
+#searchContainer {
+  background-color: #ffffff;
+  border: 1px solid #d9d5f2;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 8px rgba(75, 46, 131, 0.05);
+  transition: max-height 0.6s ease, opacity 0.3s ease;
+}
+
+#results {
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 0 5px rgba(0,0,0,0.05);
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+  background-color: #e6e0ff;
+  color: #3b2e8a;
+  font-weight: bold;
+}
+
+#status {
+  margin-top: 10px;
+  font-style: italic;
+  color: #4b2e83;
+}
+
+#spinner {
+  display: none;
+  margin-top: 10px;
+  text-align: center;
+  color: #4b2e83;
+}
+
+#downloadButtons {
+  margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+  #searchContainer {
+    padding: 16px;
+  }
+
+  table, thead, tbody, th, td, tr {
+    font-size: 0.95em;
+  }
+
+  button {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+}
