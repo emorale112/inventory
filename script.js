@@ -10,15 +10,21 @@ const downloadSection = document.getElementById('download-section');
 const downloadCSVBtn = document.getElementById('downloadCSV');
 const downloadJSONBtn = document.getElementById('downloadJSON');
 
-function populateSheetNames() {
-  google.script.run.withSuccessHandler(sheets => {
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec';
+
+async function populateSheetNames() {
+  try {
+    const res = await fetch(WEB_APP_URL + '?mode=sheets');
+    const sheets = await res.json();
     sheets.forEach(name => {
       const option = document.createElement('option');
       option.value = name;
       option.textContent = name;
       sheetSelect.appendChild(option);
     });
-  }).getSheetNames();
+  } catch (err) {
+    statusDiv.textContent = 'Error loading sheets.';
+  }
 }
 
 function formatDate(d) {
@@ -27,7 +33,7 @@ function formatDate(d) {
   return dt.toLocaleDateString();
 }
 
-function search() {
+async function search() {
   const query = queryInput.value.trim();
   const column = document.getElementById('column').value;
   const sheet = sheetSelect.value;
@@ -44,22 +50,27 @@ function search() {
   downloadSection.style.display = 'none';
   searchBtn.disabled = true;
 
-  google.script.run.withSuccessHandler(results => {
+  try {
+    const response = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, column, sheet, startDate, endDate })
+    });
+    const results = await response.json();
     loader.style.display = 'none';
     searchBtn.disabled = false;
 
     if (!results.length) {
       statusDiv.textContent = 'No matching rows found.';
-      resultsContainer.style.display = 'none';
       return;
     }
     statusDiv.textContent = `Found ${results.length} matching rows.`;
     displayResults(results);
-  }).withFailureHandler(e => {
+  } catch (err) {
     loader.style.display = 'none';
     searchBtn.disabled = false;
-    statusDiv.textContent = 'Error: ' + e.message;
-  }).searchSheets(query, column, sheet, startDate, endDate);
+    statusDiv.textContent = 'Error: ' + err.message;
+  }
 }
 
 function displayResults(results) {
@@ -96,5 +107,6 @@ function displayResults(results) {
 queryInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') searchBtn.click();
 });
-
 searchBtn.addEventListener('click', search);
+
+populateSheetNames();
