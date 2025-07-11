@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec';
+const SCRIPT_URL = 'https://cold-bush-cd4e.poptique1.workers.dev/';
 
 function setStatus(text) {
   document.getElementById('status').textContent = text;
