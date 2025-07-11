@@ -1,5 +1,7 @@
 const SCRIPT_URL = 'https://cold-bush-cd4e.poptique1.workers.dev/';
 
+const spinner = document.getElementById('spinner');
+
 function setStatus(text) {
   document.getElementById('status').textContent = text;
 }
@@ -13,6 +15,7 @@ function clearResults() {
 function displayResults(data) {
   const container = document.getElementById('results');
   container.innerHTML = '';
+
   if (!data || data.length === 0) {
     setStatus('No matching rows found.');
     container.textContent = 'No matching rows found.';
@@ -36,6 +39,7 @@ function displayResults(data) {
           ${row.map(cell => `<td>${cell}</td>`).join('')}
         </tr>`).join('')}
     </tbody>`;
+
   container.appendChild(table);
   document.getElementById('downloadButtons').style.display = 'block';
 }
@@ -76,50 +80,46 @@ async function runSearch() {
   const query = document.getElementById('query').value.trim();
   const column = document.getElementById('column').value;
   const sheet = document.getElementById('sheet').value;
-  const emailInput = document.getElementById('email');
-  const email = emailInput ? emailInput.value.trim() : '';
+  const email = document.getElementById('email').value.trim();
   const searchContainer = document.getElementById('searchContainer');
 
-  const spinner = document.getElementById('spinner');
-    spinner.classList.add('pulse-heart');
-    spinner.style.display = 'inline-block';
-    
-    // When done searching:
-    spinner.classList.remove('pulse-heart');
-    spinner.style.display = 'none';
-
-
   if (!query) return setStatus('Please enter a search term.');
+
   setStatus('Searching...');
-  spinner.style.display = 'block';
+  spinner.style.display = 'inline-block'; // show spinner
 
   try {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'searchSheets', query, column, sheet, email }),
+      body: JSON.stringify({ action: 'search', query, column, sheet, email }),
       headers: { 'Content-Type': 'application/json' },
     });
     const data = await res.json();
+
     if (data.error) throw new Error(data.error);
 
     displayResults(data.results);
-    if (searchContainer) {
-      searchContainer.style.maxHeight = '0';
-      searchContainer.style.overflow = 'hidden';
-    }
+
+    // Collapse the search area
+    document.getElementById('search-area').classList.add('hidden');
+    searchContainer.style.maxHeight = '0';
+    searchContainer.style.overflow = 'hidden';
+
     setStatus(`Found ${data.results.length} matching row(s).`);
   } catch (err) {
     setStatus('Search error: ' + err.message);
   } finally {
-    spinner.style.display = 'none';
+    spinner.style.display = 'none'; // hide spinner
   }
 }
 
+// Load sheet names into dropdown
 async function loadSheets() {
   try {
-    const res = await fetch(SCRIPT_URL + '?action=getSheetNames');
+    const res = await fetch(`${SCRIPT_URL}?action=getSheetNames`);
     const data = await res.json();
     const sheetSelect = document.getElementById('sheet');
+
     data.sheets.forEach(name => {
       const opt = document.createElement('option');
       opt.value = name;
