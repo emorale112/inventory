@@ -127,3 +127,8 @@ document.getElementById('query').addEventListener('keydown', e => {
 });
 
 loadSheets();
+
+window.onload = () => {
+  document.getElementById('query').focus();
+};
+
