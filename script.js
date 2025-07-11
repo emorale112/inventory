@@ -1,79 +1,109 @@
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec'; 
+// Replace YOUR_SCRIPT_ID with your actual Google Apps Script deployment ID
 
-const queryInput = document.getElementById('query');
-const columnSelect = document.getElementById('column');
-const sheetSelect = document.getElementById('sheet');
-const searchBtn = document.getElementById('searchBtn');
-const loader = document.getElementById('loader');
-const statusDiv = document.getElementById('status');
-const resultsDiv = document.getElementById('results');
-const resultsContainer = document.getElementById('results-container');
-const downloadSection = document.getElementById('download-section');
+// Load sheet names on page load
+window.addEventListener('DOMContentLoaded', () => {
+  fetch(`${SCRIPT_URL}?mode=sheets`)
+    .then(r => r.json())
+    .then(sheetNames => {
+      const sheetSelect = document.getElementById('sheet');
+      sheetNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        sheetSelect.appendChild(option);
+      });
+    })
+    .catch(err => {
+      console.error('Error loading sheets:', err);
+      showStatus('Failed to load sheet names.');
+    });
+});
 
-document.getElementById('downloadCSV').addEventListener('click', () => download('csv'));
-document.getElementById('downloadJSON').addEventListener('click', () => download('json'));
+document.getElementById('searchBtn').addEventListener('click', runSearch);
 
-async function populateSheets() {
-  const res = await fetch(WEB_APP_URL + '?mode=sheets');
-  const sheets = await res.json();
-  sheets.forEach(name => {
-    const option = document.createElement('option');
-    option.value = name;
-    option.textContent = name;
-    sheetSelect.appendChild(option);
-  });
+document.getElementById('query').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runSearch();
+});
+
+function showStatus(msg) {
+  const status = document.getElementById('status');
+  status.textContent = msg;
 }
 
-async function search() {
-  const query = queryInput.value.trim();
-  const column = columnSelect.value;
-  const sheet = sheetSelect.value;
+function showSpinner(show) {
+  document.getElementById('spinner').style.display = show ? 'block' : 'none';
+}
+
+function runSearch() {
+  const query = document.getElementById('query').value.trim();
+  if (!query) {
+    showStatus('Please enter a search term.');
+    return;
+  }
+
+  const column = document.getElementById('column').value;
+  const sheet = document.getElementById('sheet').value;
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
 
-  if (!query) {
-    statusDiv.textContent = 'Please enter a search term.';
-    return;
-  }
+  showStatus('Searching...');
+  showSpinner(true);
+  document.getElementById('searchBtn').disabled = true;
 
-  loader.style.display = 'block';
-  statusDiv.textContent = '';
-  resultsDiv.innerHTML = '';
-  resultsContainer.style.display = 'none';
-  downloadSection.style.display = 'none';
-
-  const response = await fetch(WEB_APP_URL, {
-    method: 'POST',
-    body: JSON.stringify({ query, column, sheet, startDate, endDate }),
-    headers: { 'Content-Type': 'application/json' }
+  const params = new URLSearchParams({
+    mode: 'search',
+    query,
+    column,
+    sheet,
+    startDate,
+    endDate
   });
 
-  const results = await response.json();
-  loader.style.display = 'none';
+  fetch(`${SCRIPT_URL}?${params.toString()}`)
+    .then(response => {
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    })
+    .then(results => {
+      showSpinner(false);
+      document.getElementById('searchBtn').disabled = false;
 
-  if (!results.length) {
-    statusDiv.textContent = 'No results found.';
-    return;
-  }
+      if (results.error) {
+        showStatus(`Error: ${results.error}`);
+        clearResults();
+        return;
+      }
 
-  displayResults(results);
+      if (!results.length) {
+        showStatus('No matching rows found.');
+        clearResults();
+        return;
+      }
+
+      showStatus(`Found ${results.length} matching row(s).`);
+
+      displayResults(results);
+    })
+    .catch(error => {
+      showSpinner(false);
+      document.getElementById('searchBtn').disabled = false;
+      showStatus('Search failed: ' + error.message);
+      clearResults();
+    });
 }
 
-function displayResults(rows) {
-  const table = document.createElement('table');
-  const headers = ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'];
-  const thead = document.createElement('thead');
-  const tr = document.createElement('tr');
-  headers.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h;
-    tr.appendChild(th);
-  });
-  thead.appendChild(tr);
-  table.appendChild(thead);
+function clearResults() {
+  const tbody = document.querySelector('#resultsTable tbody');
+  tbody.innerHTML = '';
+  document.getElementById('resultsTable').style.display = 'none';
+}
 
-  const tbody = document.createElement('tbody');
-  rows.forEach(row => {
+function displayResults(results) {
+  const tbody = document.querySelector('#resultsTable tbody');
+  tbody.innerHTML = '';
+
+  results.forEach(row => {
     const tr = document.createElement('tr');
     row.forEach(cell => {
       const td = document.createElement('td');
@@ -82,43 +112,6 @@ function displayResults(rows) {
     });
     tbody.appendChild(tr);
   });
-  table.appendChild(tbody);
-  resultsDiv.innerHTML = '';
-  resultsDiv.appendChild(table);
-  resultsContainer.style.display = 'block';
-  downloadSection.style.display = 'block';
+
+  document.getElementById('resultsTable').style.display = 'table';
 }
-
-function download(type) {
-  const table = document.querySelector('table');
-  if (!table) return;
-
-  let content = '';
-  const rows = Array.from(table.querySelectorAll('tr')).map(row =>
-    Array.from(row.querySelectorAll('th,td')).map(cell => cell.textContent)
-  );
-
-  if (type === 'csv') {
-    content = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-    downloadFile('results.csv', content);
-  } else {
-    const [header, ...data] = rows;
-    const json = data.map(row => Object.fromEntries(row.map((v, i) => [header[i], v])));
-    downloadFile('results.json', JSON.stringify(json, null, 2));
-  }
-}
-
-function downloadFile(filename, content) {
-  const blob = new Blob([content], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-}
-
-searchBtn.addEventListener('click', search);
-queryInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') search();
-});
-
-populateSheets();
