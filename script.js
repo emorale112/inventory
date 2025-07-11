@@ -1,144 +1,80 @@
-const SCRIPT_URL = 'https://cold-bush-cd4e.poptique1.workers.dev/';
-
-const spinner = document.getElementById('spinner');
-
-function setStatus(text) {
-  document.getElementById('status').textContent = text;
+body {
+  font-family: 'Nunito', sans-serif;
+  background-color: #f3f1ff;
+  color: #3b2e8a;
+  margin: 20px;
+  padding: 0;
 }
 
-function clearResults() {
-  document.getElementById('results').innerHTML = '';
-  document.getElementById('downloadButtons').style.display = 'none';
-  setStatus('Results cleared.');
+#search-area input,
+#search-area select {
+  margin-right: 8px;
+  padding: 6px 8px;
+  font-size: 16px;
+  border: 1px solid #a9a2ff;
+  border-radius: 4px;
 }
 
-function displayResults(data) {
-  const container = document.getElementById('results');
-  container.innerHTML = '';
+button {
+  background-color: #6a5acd;
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 8px 14px;
+  margin-right: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
 
-  if (!data || data.length === 0) {
-    setStatus('No matching rows found.');
-    container.textContent = 'No matching rows found.';
-    return;
+button:hover {
+  background-color: #5143a6;
+}
+
+.spinner {
+  font-size: 30px;
+  animation: pulse 1.5s infinite;
+  display: inline-block;
+  user-select: none;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
   }
-
-  const table = document.createElement('table');
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>Box Location</th>
-        <th>Item Name</th>
-        <th>UPC</th>
-        <th>Quantity</th>
-        <th>Received Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${data.map((row, i) => `
-        <tr style="background:${i % 2 === 0 ? '#f9f9ff' : '#ffffff'}">
-          ${row.map(cell => `<td>${cell}</td>`).join('')}
-        </tr>`).join('')}
-    </tbody>`;
-
-  container.appendChild(table);
-  document.getElementById('downloadButtons').style.display = 'block';
-}
-
-function downloadCSV() {
-  const table = document.querySelector('#results table');
-  if (!table) return;
-  let csv = [];
-  table.querySelectorAll('tr').forEach(row => {
-    const cells = Array.from(row.querySelectorAll('th,td')).map(td => `"${td.textContent}"`);
-    csv.push(cells.join(','));
-  });
-  const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'search_results.csv';
-  a.click();
-}
-
-function downloadJSON() {
-  const table = document.querySelector('#results table');
-  if (!table) return;
-  const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
-  const data = Array.from(table.querySelectorAll('tbody tr')).map(tr => {
-    const row = Array.from(tr.querySelectorAll('td')).map(td => td.textContent);
-    return Object.fromEntries(headers.map((key, i) => [key, row[i]]));
-  });
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'search_results.json';
-  a.click();
-}
-
-async function runSearch() {
-  const query = document.getElementById('query').value.trim();
-  const column = document.getElementById('column').value;
-  const sheet = document.getElementById('sheet').value;
-  const email = document.getElementById('email').value.trim();
-  const searchContainer = document.getElementById('searchContainer');
-
-  if (!query) return setStatus('Please enter a search term.');
-
-  setStatus('Searching...');
-  spinner.style.display = 'inline-block'; // show spinner
-
-  try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'search', query, column, sheet, email }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const data = await res.json();
-
-    if (data.error) throw new Error(data.error);
-
-    displayResults(data.results);
-
-    // Collapse the search area
-    document.getElementById('search-area').classList.add('hidden');
-    searchContainer.style.maxHeight = '0';
-    searchContainer.style.overflow = 'hidden';
-
-    setStatus(`Found ${data.results.length} matching row(s).`);
-  } catch (err) {
-    setStatus('Search error: ' + err.message);
-  } finally {
-    spinner.style.display = 'none'; // hide spinner
+  50% {
+    transform: scale(1.3);
+    opacity: 0.6;
   }
 }
 
-// Load sheet names into dropdown
-async function loadSheets() {
-  try {
-    const res = await fetch(`${SCRIPT_URL}?action=getSheetNames`);
-    const data = await res.json();
-    const sheetSelect = document.getElementById('sheet');
-
-    data.sheets.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      sheetSelect.appendChild(opt);
-    });
-  } catch (err) {
-    setStatus('Error loading sheets: ' + err.message);
-  }
+#status {
+  margin-top: 12px;
+  font-weight: 600;
 }
 
-document.getElementById('searchBtn').addEventListener('click', runSearch);
-document.getElementById('clearBtn').addEventListener('click', clearResults);
-document.getElementById('query').addEventListener('keydown', e => {
-  if (e.key === 'Enter') runSearch();
-});
+#results table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
 
-loadSheets();
+#results th,
+#results td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
 
-window.onload = () => {
-  document.getElementById('query').focus();
-};
+#results th {
+  background-color: #e4e0ff;
+  color: #3b2e8a;
+  text-align: left;
+  font-weight: 700;
+}
+
+#results tr:nth-child(even) {
+  background-color: #f9f9ff;
+}
