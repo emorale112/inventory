@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Search Inventory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8f4ff;
+      color: #222;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #5a3d99;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: #5a3d99;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #status {
+      margin-top: 12px;
+      font-weight: bold;
+      color: #5a3d99;
+    }
+
+    .spinner {
+      display: none;
+      margin: 12px auto;
+      width: 32px;
+      height: 32px;
+      border: 4px solid #ddd;
+      border-top: 4px solid #5a3d99;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Search Inventory</h1>
+
+  <label for="query">Search Term</label>
+  <input type="text" id="query" placeholder="e.g., Pikachu" />
+
+  <label for="column">Column</label>
+  <select id="column">
+    <option value="all">All Columns</option>
+    <option value="Item Name">Item Name</option>
+    <option value="UPC">UPC</option>
+    <option value="Quantity">Quantity</option>
+    <option value="Received Date">Received Date</option>
+  </select>
+
+  <label for="sheet">Sheet</label>
+  <input type="text" id="sheet" value="all" />
+
+  <label for="startDate">Start Date</label>
+  <input type="date" id="startDate" />
+
+  <label for="endDate">End Date</label>
+  <input type="date" id="endDate" />
+
+  <button onclick="runSearch()">Search</button>
+  <div class="spinner" id="spinner"></div>
+  <div id="status">Ready</div>
+
+  <script>
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec';
+
+    function runSearch() {
+      const query = document.getElementById('query').value;
+      const column = document.getElementById('column').value;
+      const sheet = document.getElementById('sheet').value;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const status = document.getElementById('status');
+      const spinner = document.getElementById('spinner');
+
+      if (!query) {
+        status.textContent = 'Please enter a search term.';
+        return;
+      }
+
+      status.textContent = 'Searching...';
+      spinner.style.display = 'block';
+
+      const url = `${webAppUrl}?query=${encodeURIComponent(query)}&column=${encodeURIComponent(column)}&sheet=${encodeURIComponent(sheet)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          spinner.style.display = 'none';
+          if (data.success) {
+            status.textContent = `✅ Found ${data.count} matching row(s). See "Search Results" in your Google Sheet.`;
+          } else {
+            status.textContent = `❌ Error: ${data.error}`;
+          }
+        })
+        .catch(err => {
+          spinner.style.display = 'none';
+          status.textContent = `⚠️ Request failed: ${err.message}`;
+        });
+    }
+  </script>
+</body>
+</html>
