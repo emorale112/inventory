@@ -18,35 +18,17 @@ function jsonp(url, callbackName) {
       script.remove();
     };
 
+    // Append callback param to URL
     script.src = `${url}&callback=${cbName}`;
     document.body.appendChild(script);
   });
 }
 
-// Populate sheets dropdown
-function loadSheets() {
-  jsonp(`${SCRIPT_URL}?action=getSheetNames`)
-    .then(data => {
-      if (data.error) throw new Error(data.error);
-      const select = document.getElementById('sheet');
-      data.sheets.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-      });
-      setStatus('Ready');
-    })
-    .catch(err => setStatus('Error loading sheets: ' + err.message));
-}
-
-// Display status text
 function setStatus(text) {
   const status = document.getElementById('status');
   status.textContent = text;
 }
 
-// Render results in a table
 function displayResults(results) {
   const container = document.getElementById('results');
   container.innerHTML = '';
@@ -94,7 +76,6 @@ function displayResults(results) {
   container.appendChild(table);
 }
 
-// Run search query
 function runSearch() {
   const query = document.getElementById('query').value.trim();
   if (!query) {
@@ -123,11 +104,26 @@ function runSearch() {
     });
 }
 
-// Event listeners
-document.getElementById('searchBtn').addEventListener('click', runSearch);
-document.getElementById('query').addEventListener('keydown', e => {
-  if (e.key === 'Enter') runSearch();
-});
+function loadSheets() {
+  jsonp(`${SCRIPT_URL}?action=getSheetNames`)
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      const select = document.getElementById('sheet');
+      data.sheets.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+      setStatus('Ready');
+    })
+    .catch(err => setStatus('Error loading sheets: ' + err.message));
+}
 
-// Initialize
-loadSheets();
+document.addEventListener('DOMContentLoaded', () => {
+  loadSheets();
+  document.getElementById('searchBtn').addEventListener('click', runSearch);
+  document.getElementById('query').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runSearch();
+  });
+});
