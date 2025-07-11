@@ -13,12 +13,11 @@ function clearResults() {
 function displayResults(data) {
   const container = document.getElementById('results');
   container.innerHTML = '';
-  if (!results || results.length === 0) {
+  if (!data || data.length === 0) {
     setStatus('No matching rows found.');
     container.textContent = 'No matching rows found.';
     return;
   }
-
 
   const table = document.createElement('table');
   table.innerHTML = `
@@ -77,7 +76,8 @@ async function runSearch() {
   const query = document.getElementById('query').value.trim();
   const column = document.getElementById('column').value;
   const sheet = document.getElementById('sheet').value;
-  const email = document.getElementById('email').value.trim();
+  const emailInput = document.getElementById('email');
+  const email = emailInput ? emailInput.value.trim() : '';
   const spinner = document.getElementById('spinner');
   const searchContainer = document.getElementById('searchContainer');
 
@@ -88,17 +88,18 @@ async function runSearch() {
   try {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'search', query, column, sheet, email }),
+      body: JSON.stringify({ action: 'searchSheets', query, column, sheet, email }),
       headers: { 'Content-Type': 'application/json' },
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
     displayResults(data.results);
-    document.getElementById('search-area').classList.add('hidden');
+    if (searchContainer) {
+      searchContainer.style.maxHeight = '0';
+      searchContainer.style.overflow = 'hidden';
+    }
     setStatus(`Found ${data.results.length} matching row(s).`);
-    searchContainer.style.maxHeight = '0';
-    searchContainer.style.overflow = 'hidden';
   } catch (err) {
     setStatus('Search error: ' + err.message);
   } finally {
@@ -106,7 +107,6 @@ async function runSearch() {
   }
 }
 
-// Load sheet names
 async function loadSheets() {
   try {
     const res = await fetch(SCRIPT_URL + '?action=getSheetNames');
@@ -134,4 +134,3 @@ loadSheets();
 window.onload = () => {
   document.getElementById('query').focus();
 };
-
