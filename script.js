@@ -1,9 +1,9 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxplszX0XuAQKRsutvmzcmU5ACI3nVaE6cwQamXxvZc2d14Ug2uHM3PmrkrJNJBdVj1Bw/exec';
 
-// Set status text
-function setStatus(text) {
+// Show status message
+function setStatus(message) {
   const status = document.getElementById('status');
-  status.textContent = text;
+  if (status) status.textContent = message;
 }
 
 // Load sheet names
@@ -11,16 +11,17 @@ async function loadSheets() {
   try {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'getSheetNames' }),
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getSheetNames' })
     });
     const data = await res.json();
-    const select = document.getElementById('sheet');
+    const sheetSelect = document.getElementById('sheet');
+    if (!data.sheets || !Array.isArray(data.sheets)) throw new Error('No sheets found');
     data.sheets.forEach(name => {
       const opt = document.createElement('option');
       opt.value = name;
       opt.textContent = name;
-      select.appendChild(opt);
+      sheetSelect.appendChild(opt);
     });
     setStatus('Ready');
   } catch (err) {
@@ -28,28 +29,25 @@ async function loadSheets() {
   }
 }
 
-// Display results in table
+// Display search results in a table
 function displayResults(results) {
   const container = document.getElementById('results');
   container.innerHTML = '';
 
-  if (!results.length) {
+  if (!results || !results.length) {
     container.textContent = 'No matching rows found.';
     return;
   }
 
   const table = document.createElement('table');
-  table.style.width = '100%';
-
-  const headers = ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'];
   const thead = document.createElement('thead');
-  const tr = document.createElement('tr');
-  headers.forEach(h => {
+  const headerRow = document.createElement('tr');
+  ['Box Location', 'Item Name', 'UPC', 'Quantity', 'Received Date'].forEach(text => {
     const th = document.createElement('th');
-    th.textContent = h;
-    tr.appendChild(th);
+    th.textContent = text;
+    headerRow.appendChild(th);
   });
-  thead.appendChild(tr);
+  thead.appendChild(headerRow);
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
@@ -63,47 +61,45 @@ function displayResults(results) {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
-
   container.appendChild(table);
 }
 
-// Run search
+// Search button handler
 async function runSearch() {
   const query = document.getElementById('query').value.trim();
   const column = document.getElementById('column').value;
   const sheet = document.getElementById('sheet').value;
 
   if (!query) return setStatus('Please enter a search term.');
+
   setStatus('Searching...');
+  document.getElementById('results').innerHTML = '';
 
   try {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'searchSheets',
         query,
         column,
         sheet
-      }),
-      headers: { 'Content-Type': 'application/json' }
+      })
     });
     const data = await res.json();
-    if (data.error) {
-      setStatus('Error: ' + data.error);
-      return;
-    }
+    if (data.error) throw new Error(data.error);
     displayResults(data.results);
-    setStatus(`Found ${data.results.length} row(s).`);
+    setStatus(`Found ${data.results.length} matching row(s).`);
   } catch (err) {
     setStatus('Search error: ' + err.message);
   }
 }
 
-// Event Listeners
+// Add event listeners
 document.getElementById('searchBtn').addEventListener('click', runSearch);
 document.getElementById('query').addEventListener('keydown', e => {
   if (e.key === 'Enter') runSearch();
 });
 
-// Init
+// Initialize on page load
 loadSheets();
