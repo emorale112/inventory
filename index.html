@@ -204,8 +204,22 @@
     }
 
     function downloadResults(type) {
-      alert(`Download ${type.toUpperCase()} functionality needs to be implemented in the Apps Script backend.`);
-    }
+      let action = '';
+      if (type === 'csv') action = 'downloadCSV';
+      if (type === 'json') action = 'downloadJSON';
+      fetch(`${APPS_SCRIPT_URL}?action=${action}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.url) {
+            window.open(data.url, '_blank');
+          } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+          }
+        })
+        .catch(err => {
+          alert('Error: ' + err.message);
+        });
+      }
 
     function emailResults() {
       const email = prompt("Enter the email address to send results to:");
