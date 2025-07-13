@@ -1,5 +1,5 @@
 // Replace with your deployed Apps Script Web App URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/XXXXXXXXXXXX/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxCgx7BuJ4v6fqOoCPVbWglLZ5e0eF6shzPJNRqvMHzQ9znYvK5QKsyjNGWi0Zp0IIsw/exec';
 
 function searchSheets() {
   const query = document.getElementById('searchInput').value.trim();
