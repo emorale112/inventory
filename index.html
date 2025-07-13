@@ -56,10 +56,54 @@
       padding: 25px;
       margin-bottom: 25px;
       box-shadow: 0 5px 15px rgba(91, 62, 153, 0.1);
+      transition: all 0.3s ease;
+      overflow: hidden;
     }
 
     body.dark .search-section {
       background: rgba(44, 40, 71, 0.7);
+    }
+
+    .search-section.collapsed {
+      padding: 15px 25px;
+      margin-bottom: 15px;
+    }
+
+    .search-section.collapsed .form-row {
+      display: none;
+    }
+
+    .search-section.collapsed button {
+      margin-top: 0;
+      padding: 8px 0;
+      font-size: 1em;
+    }
+
+    .search-toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    .search-toggle h2 {
+      margin: 0;
+      font-size: 1.3em;
+      color: #4B2C67;
+    }
+
+    body.dark .search-toggle h2 {
+      color: #A28FDB;
+    }
+
+    .toggle-icon {
+      font-size: 1.2em;
+      transition: transform 0.3s ease;
+    }
+
+    .search-section.collapsed .toggle-icon {
+      transform: rotate(180deg);
     }
 
     .form-row {
@@ -67,6 +111,7 @@
       grid-template-columns: 1fr 1fr;
       gap: 20px;
       margin-bottom: 20px;
+      transition: all 0.3s ease;
     }
 
     @media (max-width: 768px) {
@@ -371,7 +416,12 @@
   <div class="container">
     <h1>Search Across Sheets</h1>
 
-    <div class="search-section">
+    <div class="search-section" id="searchSection">
+      <div class="search-toggle" onclick="toggleSearchSection()">
+        <h2>Search Options</h2>
+        <span class="toggle-icon">▼</span>
+      </div>
+
       <div class="form-row">
         <div>
           <label for="query">Search Term</label>
@@ -417,16 +467,16 @@
       <div class="loader" id="spinner" role="status" aria-live="polite" aria-label="Loading"></div>
 
       <div class="status" id="status" aria-live="polite">Ready</div>
-
-      <div class="download-buttons" id="downloadButtons" aria-live="polite" role="region" aria-label="Download search results">
-        <button onclick="downloadResults('csv')">Download CSV</button>
-        <button onclick="downloadResults('json')">Download JSON</button>
-      </div>
     </div>
 
     <div class="results-section" id="resultsSection" style="display: none;">
       <h2>Search Results</h2>
       <div id="results"></div>
+      
+      <div class="download-buttons" id="downloadButtons" aria-live="polite" role="region" aria-label="Download search results">
+        <button onclick="downloadResults('csv')">Download CSV</button>
+        <button onclick="downloadResults('json')">Download JSON</button>
+      </div>
     </div>
 
     <div class="toggle-container">
@@ -437,7 +487,7 @@
 
   <script>
     // Replace with your deployed Apps Script Web App URL
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxCgx7BuJ4v6fqOoCPVbWglLZ5e0eF6shzPJNRqvMHzQ9znYvK5QKsyjNGWi0Zp0IIsw/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/XXXXXXXXXXXX/exec';
 
     function runSearch() {
       const query = document.getElementById('query').value.trim();
@@ -480,8 +530,10 @@
           if (data.success) {
             status.textContent = `Found ${data.results.length} matching row(s).`;
             displayResults(data.results);
-            const downloadButtons = document.getElementById('downloadButtons');
-            downloadButtons.style.display = data.results.length > 0 ? 'flex' : 'none';
+            // Auto-collapse search section after successful search
+            setTimeout(() => {
+              collapseSearchSection();
+            }, 1000);
           } else {
             status.textContent = 'Error: ' + data.error;
           }
@@ -513,6 +565,21 @@
       }
       
       resultsSection.style.display = 'block';
+    }
+
+    function toggleSearchSection() {
+      const searchSection = document.getElementById('searchSection');
+      searchSection.classList.toggle('collapsed');
+    }
+
+    function collapseSearchSection() {
+      const searchSection = document.getElementById('searchSection');
+      searchSection.classList.add('collapsed');
+    }
+
+    function expandSearchSection() {
+      const searchSection = document.getElementById('searchSection');
+      searchSection.classList.remove('collapsed');
     }
 
     function toggleDarkMode() {
