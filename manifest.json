@@ -1,0 +1,21 @@
+// manifest.json
+{
+  "name": "POPTIQUE Picker",
+  "short_name": "POPTIQUE",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7a3cff",
+  "icons": [
+    {
+      "src": "poptique-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "poptique-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
